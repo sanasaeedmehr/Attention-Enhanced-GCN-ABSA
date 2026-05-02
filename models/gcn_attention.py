@@ -1,0 +1,71 @@
+# -*- coding: utf-8 -*-
+
+import math
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from layers.dynamic_rnn import DynamicLSTM
+from layers.attention import Attention, NoQueryAttention
+
+class GraphConvolution(nn.Module):
+    def __init__(self, in_features, out_features, bias=True):
+        super(GraphConvolution, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.weight = nn.Parameter(torch.FloatTensor(in_features, out_features))
+        if bias:
+            self.bias = nn.Parameter(torch.FloatTensor(out_features))
+        else:
+            self.register_parameter('bias', None)
+
+    def forward(self, text, adj):
+        hidden = torch.matmul(text, self.weight)
+        denom = torch.sum(adj, dim=2, keepdim=True) + 1
+        output = torch.matmul(adj, hidden) / denom
+        if self.bias is not None:
+            return output + self.bias
+        else:
+            return output
+
+class GCN_ATTENTION(nn.Module):
+    def __init__(self, embedding_matrix, opt):
+        super(GCN_ATTENTION, self).__init__()
+        self.embed = nn.Embedding.from_pretrained(torch.tensor(embedding_matrix, dtype=torch.float))
+        
+        self.gc1 = GraphConvolution(opt.embed_dim, opt.hidden_dim)
+        self.gc2 = GraphConvolution(opt.hidden_dim, opt.hidden_dim)
+        
+        self.fc = nn.Linear(opt.hidden_dim, opt.polarities_dim)
+        
+        self.text_embed_dropout = nn.Dropout(opt.dropout_rate)
+        
+        # self.dropout = nn.Dropout(opt.dropout_rate)
+        
+        self.self_att = Attention(opt.embed_dim, score_function='bi_linear')
+
+    def forward(self, inputs):
+        text_indices, dependency_graph = inputs
+        
+        embedded_text = self.embed(text_indices)
+        
+        text = self.text_embed_dropout(embedded_text)
+        
+        _, score = self.self_att(text, text)
+        dependency_graph = torch.mul(dependency_graph, score)
+        
+        features_after_gcn1 = F.relu(self.gc1(text, dependency_graph))
+        features_after_gcn2 = F.relu(self.gc2(features_after_gcn1, dependency_graph)) 
+        
+        pooled_features = torch.mean(features_after_gcn2, dim=1)
+        
+        alpha_mat = torch.matmul(features_after_gcn2, text.transpose(1, 2))
+        alpha = F.softmax(alpha_mat.sum(1, keepdim=True), dim=2)
+        x = torch.matmul(alpha, text).squeeze(1)
+        
+        combined_features = pooled_features + x
+        
+        sentiment_output = self.fc(combined_features)
+        
+        # sentiment_output = self.fc(dropped_features)
+        
+        return sentiment_output
