@@ -22,7 +22,7 @@ Key contributions:
 ### 2.1 Clone the repo  
 
 ```bash
-git clone https://github.com/Saeedmehr-sana/Attention-Enhanced-GCN-ABSA.git
+git clone https://github.com/sanasaeedmehr/Attention-Enhanced-GCN-ABSA.git
 cd AE‑GCN
 ```
 
