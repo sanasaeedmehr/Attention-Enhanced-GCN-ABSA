@@ -69,8 +69,7 @@ mv glove.42B.300d.txt .
 For tokenization, lemmatization, and dependency parsing, the spaCy library is utilized.
 
 ```bash
-pip install spacy
-python -m spacy download en
+python -m spacy download en_core_web_sm==3.7.4
 ```
 
 ### 2.6 Verify installation  
@@ -85,11 +84,14 @@ python -c "import torch, transformers, spacy; print('All good!')"
 
 The repository supports the following benchmark datasets:  
 
-| Dataset | Link | Notes |
-|---------|------|-------|
-| LAP‑14, REST‑14 | https://www.kaggle.com/datasets/charitarth/semeval-2014-task-4-aspectbasedsentimentanalysis | SemEval‑2014 Task 4 |
-| REST‑15 | https://www.kaggle.com/datasets/jahanbinkia/semeval-2015-absa-restaurants | SemEval‑2015 Task 12 |
-| REST‑16 | https://www.kaggle.com/datasets/fouadaurag20/semeval-2016-absa-task5 | SemEval‑2016 Task 5 |
+| Dataset | Link | 
+|---------|------|
+| SemEval‑2014 Task 4:|https://alt.qcri.org/semeval2014/task4/|
+
+|SemEval‑2015 Task 12:|https://alt.qcri.org/semeval2015/task12/|
+
+|SemEval‑2016 Task 5:|https://alt.qcri.org/semeval2016/task5/|
+
 
 
 **Generating graphs**  
@@ -120,7 +122,7 @@ Available `--model_name` options (see `train.py`):
 ### 4.2 BERT‑based Models  
 
 ```bash
-python train_bert.py --model_name=bi_lstm_gcn_att_sentic_aspect_bert --dataset=acl-14 --epochs=10 --device=cpu --lr=2e-5 --batch_size=16
+python train_bert.py --model_name=bi_lstm_gcn_att_sentic_aspect_bert --dataset=rest14 --seed=42 --epochs=10 --device=cuda
 ```
 
 Available `--model_name` options (see `train_bert.py`):
@@ -133,7 +135,14 @@ The training scripts accept standard flags (`--lr`, `--batch_size`, `--epochs`, 
 
 ---
 
-## 5. Results & Discussion  
+
+## 5. Random seeds used in the experiments:
+[42, 100, 101, 123, 2021, 2022, 2023, 2024, 2025, 2026]
+
+
+
+
+## 6. Results & Discussion  
 
 The *Proposed Model* (attention‑enhanced GCN with sentic knowledge) results:
 
