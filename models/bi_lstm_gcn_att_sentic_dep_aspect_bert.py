@@ -19,12 +19,28 @@ class GraphConvolution(nn.Module):
 
     def forward(self, text, adj):
         hidden = torch.matmul(text, self.weight)
-        denom = torch.sum(adj, dim=2, keepdim=True) + 1
-        output = torch.matmul(adj, hidden) / denom
+
+        # Symmetric normalization with absolute degree and epsilon
+        # A_norm = D_eps^(-1/2) A D_eps^(-1/2)
+        eps = 1e-6
+
+        # Absolute degree for signed weighted graphs
+        degree = torch.sum(torch.abs(adj), dim=2)
+        degree_eps = degree + eps
+
+        # D^(-1/2)
+        d_inv_sqrt = torch.pow(degree_eps, -0.5)
+
+        # Symmetric normalization
+        adj_norm = adj * d_inv_sqrt.unsqueeze(2) * d_inv_sqrt.unsqueeze(1)
+
+        output = torch.matmul(adj_norm, hidden)
+
         if self.bias is not None:
             return output + self.bias
         else:
             return output
+
 
 class BI_LSTM_GCN_ATT_SENTIC_DEP_ASPECT_BERT(nn.Module):
     def __init__(self, bert, opt):
@@ -36,7 +52,10 @@ class BI_LSTM_GCN_ATT_SENTIC_DEP_ASPECT_BERT(nn.Module):
         self.gc1 = GraphConvolution(2*opt.hidden_dim, 2*opt.hidden_dim)
         self.gc2 = GraphConvolution(2*opt.hidden_dim, 2*opt.hidden_dim)
         
-        self.attention = Attention(2 * opt.hidden_dim, score_function='bi_linear')
+        self.attention1 = Attention(2 * opt.hidden_dim, score_function='bi_linear')
+        self.attention2 = Attention(2 * opt.hidden_dim, score_function='bi_linear')
+        self.attention3 = Attention(2 * opt.hidden_dim, score_function='bi_linear')
+        self.attention4 = Attention(2 * opt.hidden_dim, score_function='bi_linear')
 
         self.fc = nn.Linear(2*opt.hidden_dim, opt.polarities_dim)
         
@@ -63,7 +82,17 @@ class BI_LSTM_GCN_ATT_SENTIC_DEP_ASPECT_BERT(nn.Module):
         gcn_output = F.relu(self.gc1(lstm_out, combined_graph))
         gcn_output = F.relu(self.gc2(gcn_output, combined_graph))
         
-        attn_output, attn_weights = self.attention(gcn_output, gcn_output)
+        attn_output1, attn_weights1 = self.attention1(gcn_output, gcn_output)
+        attn_output2, attn_weights2 = self.attention2(gcn_output, gcn_output)
+        attn_output3, attn_weights3 = self.attention3(gcn_output, gcn_output)
+        attn_output4, attn_weights4 = self.attention4(gcn_output, gcn_output)
+
+        attn_output = (
+            attn_output1 +
+            attn_output2 +
+            attn_output3 +
+            attn_output4
+        ) / 4.0
         
         pooled_features = torch.mean(attn_output, dim=1)
         
