@@ -87,9 +87,7 @@ The repository supports the following benchmark datasets:
 | Dataset | Link | 
 |---------|------|
 | SemEval‑2014 Task 4:|https://alt.qcri.org/semeval2014/task4/|
-
 |SemEval‑2015 Task 12:|https://alt.qcri.org/semeval2015/task12/|
-
 |SemEval‑2016 Task 5:|https://alt.qcri.org/semeval2016/task5/|
 
 
