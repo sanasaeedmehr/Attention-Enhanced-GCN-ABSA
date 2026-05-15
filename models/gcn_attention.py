@@ -20,12 +20,28 @@ class GraphConvolution(nn.Module):
 
     def forward(self, text, adj):
         hidden = torch.matmul(text, self.weight)
-        denom = torch.sum(adj, dim=2, keepdim=True) + 1
-        output = torch.matmul(adj, hidden) / denom
+
+        # Symmetric normalization with absolute degree and epsilon
+        # A_norm = D_eps^(-1/2) A D_eps^(-1/2)
+        eps = 1e-6
+
+        # Absolute degree for signed weighted graphs
+        degree = torch.sum(torch.abs(adj), dim=2)
+        degree_eps = degree + eps
+
+        # D^(-1/2)
+        d_inv_sqrt = torch.pow(degree_eps, -0.5)
+
+        # Symmetric normalization
+        adj_norm = adj * d_inv_sqrt.unsqueeze(2) * d_inv_sqrt.unsqueeze(1)
+
+        output = torch.matmul(adj_norm, hidden)
+
         if self.bias is not None:
             return output + self.bias
         else:
             return output
+
 
 class GCN_ATTENTION(nn.Module):
     def __init__(self, embedding_matrix, opt):
