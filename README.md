@@ -90,7 +90,17 @@ The repository supports the following benchmark datasets:
 |SemEval‑2015 Task 12:|https://alt.qcri.org/semeval2015/task12/|
 |SemEval‑2016 Task 5:|https://alt.qcri.org/semeval2016/task5/|
 
+------
+ Dataset Integrity Verification:
 
+SHA256 checksums for all datasets and processed splits are provided in `CHECKSUMS.sha256`.
+
+To verify integrity:
+
+```bash
+sha256sum -c CHECKSUMS.sha256
+
+------
 
 **Generating graphs**  
 
@@ -138,17 +148,7 @@ The training scripts accept standard flags (`--lr`, `--batch_size`, `--epochs`, 
 [42, 100, 101, 123, 2021, 2022, 2023, 2024, 2025, 2026]
 
 
-------
-## 6. Dataset Integrity Verification
 
-SHA256 checksums for all datasets and processed splits are provided in `CHECKSUMS.sha256`.
-
-To verify integrity:
-
-```bash
-sha256sum -c CHECKSUMS.sha256
-
-------
 
 ## 7. Results & Discussion  
 
