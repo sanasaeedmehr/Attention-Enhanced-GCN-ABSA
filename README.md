@@ -99,7 +99,7 @@ To verify integrity:
 
 ```bash
 sha256sum -c CHECKSUMS.sha256
-
+```
 ------
 
 **Generating graphs**  
